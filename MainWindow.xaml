@@ -39,13 +39,11 @@
 
             <!-- Manufacturer filter -->
             <ComboBox ItemsSource="{Binding Manufacturers}" SelectedItem="{Binding SelectedManufacturer}" Grid.Row="1" Grid.Column="0" Margin="5,5,5,109">
-                <ComboBoxItem Content="All Manufacturers"/>
-                <!-- Add manufacturer items dynamically or statically -->
             </ComboBox>
         </Grid>
 
         <!-- ListBox to display products -->
-        <ListBox ItemsSource="{Binding Products}" Margin="10,77,10,10">
+        <ListBox ItemsSource="{Binding CurrentProducts}" Margin="10,77,10,40">
             <ListBox.ItemTemplate>
                 <DataTemplate>
                     <Grid Width="740">
