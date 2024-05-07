@@ -5,7 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:demoEkzBelov"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="demoEkzBelov" Height="850" Width="800"
+        MaxHeight="850" MaxWidth="800">
     <Window.DataContext>
         <local:MainWindowViewModel/>
     </Window.DataContext>
@@ -19,31 +20,32 @@
         <Grid Margin="10">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" MinHeight="25"/>
-                <RowDefinition Height="Auto" MinHeight="30"/>
+                <RowDefinition Height="Auto" MinHeight="140"/>
+                <RowDefinition Height="238" MinHeight="30"/>
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" MinWidth="200"/>
-                <ColumnDefinition Width="Auto" MinWidth="200"/>
-                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto" MinWidth="273"/>
+                <ColumnDefinition Width="Auto" MinWidth="9"/>
             </Grid.ColumnDefinitions>
 
-            <Button Content="Add Test Entries" Command="{Binding AddTestEntriesCommand}" Grid.Row="1" Grid.Column="2" Margin="194,5,-359,109"/>
-            <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" Grid.Row="0" Margin="9,0,10,0"/>
+            <Button Content="Add Test Entries" Command="{Binding AddTestEntriesCommand}" Grid.Row="1" Grid.Column="2" Margin="22,10,-187,109"/>
+            <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" Grid.Row="0" Margin="5,0,0,0"/>
 
             <!-- Sorting options -->
-            <ComboBox Grid.Row="1" Grid.Column="1" Margin="10,10,10,109">
-                <ComboBoxItem Content="Sort by Price (Asc)"/>
-                <ComboBoxItem Content="Sort by Price (Desc)"/>
-                <!-- Add more sorting options as needed -->
-            </ComboBox>
+            <ToggleButton Content="{Binding SortAscendingText}" Grid.Column="1" Margin="10,10,108,109"
+                          IsChecked="{Binding SortAscending, Mode=TwoWay}" Grid.Row="1" />
+
+
 
             <!-- Manufacturer filter -->
-            <ComboBox ItemsSource="{Binding Manufacturers}" SelectedItem="{Binding SelectedManufacturer}" Grid.Row="1" Grid.Column="0" Margin="5,5,5,109">
+            <ComboBox ItemsSource="{Binding Manufacturers}" SelectedItem="{Binding SelectedManufacturer}" Grid.Row="1" Grid.Column="0" Margin="5,5,0,109">
             </ComboBox>
+
         </Grid>
 
         <!-- ListBox to display products -->
-        <ListBox ItemsSource="{Binding CurrentProducts}" Margin="10,77,10,40">
+        <ListBox ItemsSource="{Binding CurrentProducts}" Margin="0,77,0,45">
             <ListBox.ItemTemplate>
                 <DataTemplate>
                     <Grid Width="740">
@@ -68,5 +70,16 @@
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>
+
+
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,742,10,45">
+            <Button Content="|&lt;" Command="{Binding MoveToFirstPageCommand}" Margin="5"/>
+            <Button Content="|&lt;" Command="{Binding MoveToFirstPageCommand}" Margin="5"/>
+            <Button Content="&lt;&lt;" Command="{Binding MoveToPreviousPageCommand}" Margin="5"/>
+            <TextBlock Text="{Binding CurrentPage}" Margin="5"/>
+            <Button Content="&gt;&gt;" Command="{Binding MoveToNextPageCommand}" Margin="5"/>
+            <Button Content="&gt;|" Command="{Binding MoveToLastPageCommand}" Margin="5"/>
+            <TextBlock Text="{Binding PageInfo}" Margin="5"/>
+        </StackPanel>
     </Grid>
 </Window>

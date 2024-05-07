@@ -23,9 +23,8 @@ namespace demoEkzBelov
             {
                 _originalProducts = value;
                 OnPropertyChanged(nameof(OriginalProducts));
-                Products = _originalProducts;
                 PerformSearchAndSort();
-}
+            }
         }
 
         private ObservableCollection<ProductModel> _products = new ObservableCollection<ProductModel>();
@@ -38,7 +37,6 @@ namespace demoEkzBelov
                 OnPropertyChanged(nameof(Products));
             }
         }
-
 
         private int _currentPageIndex = 0;
         private int _pageSize = 10;
@@ -64,7 +62,16 @@ namespace demoEkzBelov
             }
         }
 
-        public ObservableCollection<string> Manufacturers { get; set; }
+        private ObservableCollection<string> _manufacturers;
+        public ObservableCollection<string> Manufacturers
+        {
+            get { return _manufacturers; }
+            set
+            {
+                _manufacturers = value;
+                OnPropertyChanged(nameof(Manufacturers));
+            }
+        }
 
         private string _selectedManufacturer;
         public string SelectedManufacturer
@@ -84,7 +91,26 @@ namespace demoEkzBelov
             set
             {
                 _sortAscending = value;
+                if (_sortAscending)
+                {
+                    SortAscendingText = "Сортировать по цене вверх";
+                }
+                else
+                {
+                    SortAscendingText = "Сортировать по цене вниз";
+                }
                 PerformSearchAndSort();
+            }
+        }
+
+        private string _sortAscendingText = "Сортировать по цене вверх";
+        public string SortAscendingText
+        {
+            get { return _sortAscendingText; }
+            set
+            {
+                _sortAscendingText = value;
+                OnPropertyChanged(nameof(SortAscendingText));
             }
         }
 
@@ -122,18 +148,47 @@ namespace demoEkzBelov
             }
         }
 
+        private void MoveToFirstPage()
+        {
+            CurrentPage = 1;
+        }
+
+        private void MoveToPreviousPage()
+        {
+            CurrentPage--;
+        }
+
+        private void MoveToNextPage()
+        {
+            CurrentPage++;
+        }
+
+        private void MoveToLastPage()
+        {
+            CurrentPage = TotalPages;
+        }
+
         public ICommand AddTestEntriesCommand { get; }
+        public ICommand MoveToFirstPageCommand { get; }
+        public ICommand MoveToPreviousPageCommand { get; }
+        public ICommand MoveToNextPageCommand { get; }
+        public ICommand MoveToLastPageCommand { get; }
 
         public MainWindowViewModel()
         {
             // Initialize commands
             AddTestEntriesCommand = new RelayCommand(AddTestEntries);
 
-            // Add manufacturers
-            var manufacturers = OriginalProducts.Select(p => p.Manufacturer).Distinct().ToList();
-            manufacturers.Insert(0, "All Manufacturers");
-            Manufacturers = new ObservableCollection<string>(manufacturers);
-            _selectedManufacturer = "All Manufacturers";
+            MoveToFirstPageCommand = new RelayCommand(MoveToFirstPage);
+            MoveToPreviousPageCommand = new RelayCommand(MoveToPreviousPage);
+            MoveToNextPageCommand = new RelayCommand(MoveToNextPage);
+            MoveToLastPageCommand = new RelayCommand(MoveToLastPage);
+
+            // Initialize manufacturers
+            Manufacturers = new ObservableCollection<string>();
+            // Add "Все производители" option
+            Manufacturers.Add("Все производители");
+            SelectedManufacturer = Manufacturers.FirstOrDefault();
 
             PerformSearchAndSort();
         }
@@ -148,20 +203,26 @@ namespace demoEkzBelov
                 }
             });
 
+            // Update list of manufacturers whenever adding new entries (potential new manufacturers)
+            var manufacturers = OriginalProducts.Select(p => p.Manufacturer).Distinct().ToList();
+            manufacturers.Insert(0, "Все производители");
+            Manufacturers = new ObservableCollection<string>(manufacturers);
+            _selectedManufacturer = "Все производители";
+
             PerformSearchAndSort();
         }
 
         private void PerformSearchAndSort()
         {
-            // Filter products based on search text and manufacturer
+            // Filter products based on search text, manufacturer, and sorting option
             var filteredProducts = OriginalProducts.Where(p =>
                 (string.IsNullOrWhiteSpace(SearchText) ||
                 p.Name.ToLower().Contains(SearchText.ToLower()) ||
                 p.Description.ToLower().Contains(SearchText.ToLower())) &&
-                (SelectedManufacturer == "All Manufacturers" || p.Manufacturer == SelectedManufacturer))
+                (SelectedManufacturer == "Все производители" || p.Manufacturer == SelectedManufacturer))
                 .ToList();
 
-            // Sort filtered ascending/descending by price
+            // Sort filtered products based on the selected sorting option
             if (SortAscending)
             {
                 filteredProducts = filteredProducts.OrderBy(p => p.Price).ToList();
@@ -181,25 +242,38 @@ namespace demoEkzBelov
                 Products.Add(product);
             }
 
-            // Load 1st page of updated items
-            CurrentPage = 1;
-            // LoadCurrentPageItems();
-            // Is called on updating CurrentPage
+            // Update total entries and total pages
+            TotalEntries = filteredProducts.Count;
+            TotalPages = (int)Math.Ceiling((double)TotalEntries / _pageSize);
+
+            // Update current page if it exceeds total pages
+            if (_currentPage > TotalPages)
+            {
+                _currentPage = TotalPages;
+            }
+
+            // Update the current page of products
+            LoadCurrentPageItems();
         }
 
         private void LoadCurrentPageItems()
         {
-            // Anticipating user induced errors
+            // Anticipating user-induced errors
             if (_currentPage > TotalPages)
             {
                 _currentPage = _totalPages;
+                OnPropertyChanged(nameof(CurrentPage));
             }
             else if (_currentPage < 1)
             {
                 _currentPage = 1;
+                OnPropertyChanged(nameof(CurrentPage));
             }
 
-            // Based of current page make a selection to show
+            // Update the current page index
+            _currentPageIndex = _currentPage - 1;
+
+            // Based on the current page, make a selection to show
             CurrentProducts.Clear();
             foreach (var product in Products.Skip(_currentPageIndex * _pageSize).Take(_pageSize))
             {
@@ -207,14 +281,21 @@ namespace demoEkzBelov
             }
         }
 
+        public string PageInfo => $"Showing {Math.Min((_currentPageIndex * _pageSize) + 1, TotalEntries)}-{Math.Min((_currentPageIndex + 1) * _pageSize, TotalEntries)} of {TotalEntries} entries";
+        // OnPropertyChanged raises PropertyChanged event for PageInfo
         protected virtual void OnPropertyChanged(string propertyName)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+
+            // Raise PropertyChanged for PageInfo whenever any of its dependent properties change
+            if (propertyName == nameof(_currentPageIndex) || propertyName == nameof(_pageSize) || propertyName == nameof(TotalEntries))
+            {
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(PageInfo)));
+            }
         }
+
+
     }
-
-
-
 
     // Converter to convert availability boolean to color
     public class AvailabilityToColorConverter : IValueConverter

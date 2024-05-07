@@ -36,7 +36,12 @@ namespace demoEkzBelov
 
         private static readonly List<string> _picturePaths = new List<string>
         {
-            "path1.jpg", "path2.jpg", "path3.jpg", "path4.jpg", "path5.jpg"
+            // "path1.jpg", "path2.jpg", "path3.jpg", "path4.jpg", "path5.jpg"
+                "https://cataas.com/cat",
+                "https://placekitten.com/200/300",
+                "https://www.randomdoggiegenerator.com/randomdoggie?type=cat",
+                "https://www.randomkittengenerator.com/randomkitten",
+                "https://www.placecage.com/c/200/300"
         };
 
         public static ProductModel GenerateRandomProduct()
